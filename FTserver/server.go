@@ -21,7 +21,7 @@ func main() {
 	os.Mkdir("FileTransfer", 0666)
 	os.Chdir("FileTransfer")
     f, _ := os.Create(name)
-	fmt.Printf("Copying file(%v) from %v\n", name, conn.RemoteAddr())
+	fmt.Printf("Copying file( %v ) from %v\n", name, conn.RemoteAddr())
     copyBuffer(f, conn, size)
     checkError(e)
 }

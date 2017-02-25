@@ -26,7 +26,7 @@ func main() {
     i, e := io.Copy(conn, f)
     defer checkError(e)
     fmt.Println("Sending...")
-    fmt.Printf("succesfully sent %v bytes of data\n", i)
+    fmt.Printf("Succesfully sent %v bytes of data\n", i)
     conn.Close()
 }
 
