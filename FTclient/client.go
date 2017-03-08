@@ -24,6 +24,7 @@ func main() {
 	ip := *ipFlag
 	name := "temp"
 
+	fmt.Println("Zipping File..")
 	var z zipper
 	if s.IsDir() {
 		z = dir(*path)
@@ -31,12 +32,10 @@ func main() {
 		z = file(*path)
 	}
 	z.zip(name, *path)
+	
 
 	f, e := os.Open(name + ".zip")
-	defer f.Close()
 	checkError(e)
-
-	defer os.Remove(name + ".zip")
 
 	conn := connect(ip)
 	stat, e := f.Stat()
@@ -46,13 +45,16 @@ func main() {
 	checkError(e)
 
 	fmt.Println(stat.Size())
+	fmt.Println("Sending...")
 	i, e := io.Copy(conn, f)
 	checkError(e)
-
-	fmt.Println("Sending...")
+	conn.Close()
 
 	fmt.Printf("Succesfully sent %v bytes of data\n", i)
-	conn.Close()
+	e = f.Close()
+	checkError(e)
+	go test(name)
+	checkError(e)
 }
 
 func connect(ip string) net.Conn {
@@ -65,6 +67,10 @@ func checkError(e error) {
 	if e != nil {
 		log.Fatal(e)
 	}
+}
+func test(name string) {
+	e := os.Remove(name + ".zip")
+	checkError(e)
 }
 
 func sendFileSize(size int64, conn net.Conn) error {
