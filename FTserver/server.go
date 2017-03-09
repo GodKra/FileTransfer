@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"encoding/binary"
 	"flag"
 	"fmt"
@@ -21,19 +20,16 @@ func main() {
 	os.Chdir("FileTransfer")
 	for {
 		i++
-		fmt.Printf("\n---- File %v ----\n", i)
+		fmt.Printf("\n-- File %v --\n", i)
 		checkError(e)
 		conn, e := l.Accept()
 		checkError(e)
-
-		bufcon := bufio.NewReader(conn)
-		checkError(e)
-		size, e := getSize(bufcon)
+		size, e := getSize(conn)
 		checkError(e)
 
 		f, _ := os.Create(*name + ".zip")
 		fmt.Printf("Copying file(%v) from %v\n", *name, conn.RemoteAddr())
-		download(conn, f, size)
+		download(f, conn, size)
 		fmt.Print("\n")
 		f.Close()
 	}
@@ -58,7 +54,7 @@ func listenServer(addr string) (listener net.Listener, e error) {
 	return
 }
 
-func download(src io.Reader, dst io.Writer, size uint64) {
+func download(dst io.Writer, src io.Reader, size uint64) {
 	buf := make([]byte, 32*1024)
 	var written int
 	const length = 50
@@ -72,7 +68,7 @@ func download(src io.Reader, dst io.Writer, size uint64) {
 			for i := 0; i < int(length * float64(percentage / 100)); i++ {
 				progressbar[i] = '='
 			}
-			fmt.Printf("\r[%s] %v/%v %.3v%%  ", progressbar, written, size, percentage)
+			fmt.Printf("\r%v/%v [%s] %.3v%%  ", written, size, progressbar, percentage)
 
 			checkError(ew)
 			if nr != nw {
