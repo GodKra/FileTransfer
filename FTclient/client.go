@@ -4,11 +4,12 @@ import (
 	"encoding/binary"
 	"flag"
 	"fmt"
-	"github.com/jhoonb/archivex"
+	"archive/zip"
 	"io"
 	"log"
 	"net"
 	"os"
+	"path/filepath"
 )
 
 var (
@@ -16,28 +17,20 @@ var (
 	ipFlag = flag.String("ip", "localhost:5555", "Usage : -ip <ip address:port> eg : -ip localhost:5555")
 )
 
+const name = "temp.zip"
+
 func main() {
 	flag.Parse()
-
-	s, e := os.Stat(*path)
-	checkError(e)
 	ip := *ipFlag
-	name := "temp"
 
 	fmt.Println("Zipping File..")
-	var z zipper
-	if s.IsDir() {
-		z = dir(*path)
-	} else {
-		z = file(*path)
-	}
-	z.zip(name, *path)
-	
-
-	f, e := os.Open(name + ".zip")
+	f, e := archive(name, *path)
 	checkError(e)
-
+	//defer os.Remove(name)
+	defer f.Close()
+	_, e = f.Seek(0, io.SeekStart)
 	conn := connect(ip)
+	defer conn.Close()
 	stat, e := f.Stat()
 	checkError(e)
 
@@ -48,13 +41,7 @@ func main() {
 	fmt.Println("Sending...")
 	i, e := io.Copy(conn, f)
 	checkError(e)
-	conn.Close()
-
 	fmt.Printf("Succesfully sent %v bytes of data\n", i)
-	e = f.Close()
-	checkError(e)
-	go test(name)
-	checkError(e)
 }
 
 func connect(ip string) net.Conn {
@@ -68,10 +55,6 @@ func checkError(e error) {
 		log.Fatal(e)
 	}
 }
-func test(name string) {
-	e := os.Remove(name + ".zip")
-	checkError(e)
-}
 
 func sendFileSize(size int64, conn net.Conn) error {
 	b := [8]byte{}
@@ -80,28 +63,47 @@ func sendFileSize(size int64, conn net.Conn) error {
 	return e
 }
 
-type zipper interface {
-	zip(name, path string)
+func archive(name string, p string) (*os.File, error) {
+	f, e := os.Create(name)
+	if e != nil {
+		return f, e
+	}
+	w := zip.NewWriter(f)
+	e = recursiveWrite(p, w)
+	e = w.Close()
+	return f, e
 }
 
-type dir string
+func recursiveWrite(path string, w *zip.Writer) error {
+	file, e := os.Open(path)
+	if e != nil {
+		return e
+	}
+	defer file.Close()
+	s, e := file.Stat()
+	if e != nil {
+		return e
+	}
+	
+	if filepath.Ext(file.Name()) == "zip" || !s.IsDir() {
+		wr, e := w.Create(path)
+		if e != nil {
+			return e
+		}
+		_, e = io.Copy(wr, file)
+		return e
+	}
+	list, e := file.Readdir(0)
+	if e != nil {
+		return e
+	}
+	for _, ss := range list {
+		p := filepath.Join(path, ss.Name())
+		e = recursiveWrite(p, w)
+		if e != nil {
+			return e
+		}
+	} 
 
-func (d dir) zip(name, path string) {
-	zipfile := archivex.ZipFile{}
-	e := zipfile.Create(name)
-	checkError(e)
-	e = zipfile.AddAll(path, false)
-	checkError(e)
-	zipfile.Close()
-}
-
-type file string
-
-func (f file) zip(name string, path string) {
-	zipfile := archivex.ZipFile{}
-	e := zipfile.Create(name)
-	checkError(e)
-	e = zipfile.AddFile(path)
-	checkError(e)
-	zipfile.Close()
+	return nil
 }
