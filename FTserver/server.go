@@ -54,7 +54,7 @@ func listenServer(addr string) (listener net.Listener, e error) {
 	return
 }
 
-func download(dst io.Writer, src io.Reader, size uint64) {
+func download(dst io.Writer, src io.Reader, s uint64) {
 	buf := make([]byte, 32*1024)
 	var written int
 	const length = 50
@@ -64,11 +64,11 @@ func download(dst io.Writer, src io.Reader, size uint64) {
 		if nr > 0 {
 			nw, ew := dst.Write(buf[0:nr])
 			written += nw
-			percentage := float64(written) / float64(size) * 100
+			percentage := float64(written) / float64(s) * 100
 			for i := 0; i < int(length * float64(percentage / 100)); i++ {
 				progressbar[i] = '='
 			}
-			fmt.Printf("\r%v/%v [%s] %.3v%%  ", written, size, progressbar, percentage)
+			fmt.Printf("\r%v/%v [%s] %.3v%%     ", size(written), size(s), progressbar, percentage)
 
 			checkError(ew)
 			if nr != nw {
@@ -79,5 +79,20 @@ func download(dst io.Writer, src io.Reader, size uint64) {
 			break
 		}
 		checkError(er)
+	}
+}
+
+type size int64
+
+func (s size) String() string {
+	switch {
+	case s < 1 << 10:
+		return fmt.Sprintf("%v B", float64(s))
+	case s < 1 << 20:
+		return fmt.Sprintf("%.2f KB", float64(s) / (1 << 10))
+	case s < 1 << 30:
+		return fmt.Sprintf("%.2f MB", float64(s) / (1 << 20))
+	default: 
+		return fmt.Sprintf("%.2f GB", float64(s) / (1 << 30))
 	}
 }
