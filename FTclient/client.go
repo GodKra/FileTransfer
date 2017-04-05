@@ -1,10 +1,10 @@
 package main
 
 import (
+	"archive/zip"
 	"encoding/binary"
 	"flag"
 	"fmt"
-	"archive/zip"
 	"io"
 	"log"
 	"net"
@@ -13,8 +13,8 @@ import (
 )
 
 var (
-	path   = flag.String("path", "FileTransfer", "Usage : -path <path> eg : -path FileTransfer/test")
-	ipFlag = flag.String("ip", "localhost:5555", "Usage : -ip <ip address:port> eg : -ip localhost:5555")
+	path      = flag.String("path", "FileTransfer", "Usage : -path <path> | eg : -path FileTransfer/test")
+	ipFlag    = flag.String("ip", "localhost:5555", "Usage : -ip <ip address:port> | eg : -ip localhost:5555")
 )
 
 const name = "temp.zip"
@@ -22,23 +22,22 @@ const name = "temp.zip"
 func main() {
 	flag.Parse()
 	ip := *ipFlag
+	conn := connect(ip)
+	defer conn.Close()
 
 	fmt.Println("Zipping File..")
 	f, e := archive(name, *path)
 	checkError(e)
-	//defer os.Remove(name)
+	defer os.Remove(name)
 	defer f.Close()
 	_, e = f.Seek(0, io.SeekStart)
-	conn := connect(ip)
-	defer conn.Close()
+	checkError(e)
 	stat, e := f.Stat()
 	checkError(e)
-
 	e = sendFileSize(stat.Size(), conn)
 	checkError(e)
 
-	fmt.Println(stat.Size())
-	fmt.Println("Sending...")
+	fmt.Printf("Sending %v bytes...\n", stat.Size())
 	i, e := io.Copy(conn, f)
 	checkError(e)
 	fmt.Printf("Succesfully sent %v bytes of data\n", i)
@@ -69,12 +68,12 @@ func archive(name string, p string) (*os.File, error) {
 		return f, e
 	}
 	w := zip.NewWriter(f)
-	e = recursiveWrite(p, w)
+	e = recursiveArchive(p, w)
 	e = w.Close()
 	return f, e
 }
 
-func recursiveWrite(path string, w *zip.Writer) error {
+func recursiveArchive(path string, w *zip.Writer) error {
 	file, e := os.Open(path)
 	if e != nil {
 		return e
@@ -84,7 +83,7 @@ func recursiveWrite(path string, w *zip.Writer) error {
 	if e != nil {
 		return e
 	}
-	
+
 	if filepath.Ext(file.Name()) == "zip" || !s.IsDir() {
 		wr, e := w.Create(path)
 		if e != nil {
@@ -99,11 +98,10 @@ func recursiveWrite(path string, w *zip.Writer) error {
 	}
 	for _, ss := range list {
 		p := filepath.Join(path, ss.Name())
-		e = recursiveWrite(p, w)
+		e = recursiveArchive(p, w)
 		if e != nil {
 			return e
 		}
-	} 
-
+	}
 	return nil
 }

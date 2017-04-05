@@ -27,8 +27,9 @@ func main() {
 		size, e := getSize(conn)
 		checkError(e)
 
-		f, _ := os.Create(*name + ".zip")
-		fmt.Printf("Copying file(%v) from %v\n", *name, conn.RemoteAddr())
+		fileName := fmt.Sprintf("%v%v.zip", *name, i)
+		f, _ := os.Create(fileName)
+		fmt.Printf("Copying file from %v\n", conn.RemoteAddr())
 		download(f, conn, size)
 		fmt.Print("\n")
 		f.Close()
