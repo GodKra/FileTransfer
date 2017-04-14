@@ -26,7 +26,7 @@ func main() {
 	fmt.Println("Zipping File..")
 	f, e := archive(name, *path)
 	checkError(e)
-	//defer os.Remove(name)
+	defer os.Remove(name)
 	defer f.Close()
 	_, e = f.Seek(0, io.SeekStart)
 	conn := connect(ip)
