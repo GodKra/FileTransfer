@@ -9,6 +9,7 @@ import (
 	"net"
 	"os"
 	"bytes"
+	"time"
 )
 
 func main() {
@@ -56,6 +57,7 @@ func listenServer(addr string) (listener net.Listener, e error) {
 }
 
 func download(dst io.Writer, src io.Reader, s uint64) {
+	duration := time.Now()
 	buf := make([]byte, 32*1024)
 	var written int
 	const length = 50
@@ -69,8 +71,7 @@ func download(dst io.Writer, src io.Reader, s uint64) {
 			for i := 0; i < int(length * float64(percentage / 100)); i++ {
 				progressbar[i] = '='
 			}
-			fmt.Printf("\r%v/%v [%s] %.3v%%     ", size(written), size(s), progressbar, percentage)
-
+			fmt.Printf("\r%v/%v [%s] %.3v%%      ", size(written), size(s), progressbar, percentage)
 			checkError(ew)
 			if nr != nw {
 				log.Fatal(io.ErrShortWrite)
@@ -81,6 +82,7 @@ func download(dst io.Writer, src io.Reader, s uint64) {
 		}
 		checkError(er)
 	}
+	fmt.Printf("Time taken: %v", time.Now().Sub(duration))
 }
 
 type size int64
