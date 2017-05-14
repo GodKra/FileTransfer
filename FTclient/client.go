@@ -13,8 +13,8 @@ import (
 )
 
 var (
-	path      = flag.String("path", "FileTransfer", "Usage : -path <path> | eg : -path FileTransfer/test")
-	ipFlag    = flag.String("ip", "localhost:5555", "Usage : -ip <ip address:port> | eg : -ip localhost:5555")
+	path   = flag.String("path", "FileTransfer", "Usage : -path <path> | eg : -path FileTransfer/test")
+	ipFlag = flag.String("ip", "localhost:5555", "Usage : -ip <ip address:port> | eg : -ip localhost:5555")
 )
 
 const name = "temp.zip"

@@ -30,10 +30,10 @@ func main() {
 
 		fileName := fmt.Sprintf("%v%v.zip", *name, i)
 		f, _ := os.Create(fileName)
+		defer f.Close()
 		fmt.Printf("Copying file from %v\n", conn.RemoteAddr())
 		download(f, conn, size)
 		fmt.Print("\n")
-		f.Close()
 	}
 }
 
