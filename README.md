@@ -8,3 +8,4 @@ A simple client and server used for sending files. give argument "-help" for ava
 * 'Zip's the file and creates a temporary .zip file
 * Sends the zipped file size to the server
 * Sends the zipped file to the server
+* Server downloads the zipped file
