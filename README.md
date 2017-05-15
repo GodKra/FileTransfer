@@ -13,3 +13,6 @@ server before connecting to it). You have to give either "--type" "downloader" o
 * Sender sends the zipped file size then file to the Downloader.
 * Downloader reads the size and makes a progress bar.
 * Downloader saves the read zipped file.
+
+## Installation
+  You can install this program from the '[Releases](https://github.com/GodKra/FileTransfer/releases/latest "Latest Release")' tab
