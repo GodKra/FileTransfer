@@ -1,58 +1,49 @@
-package main
+package sender
 
 import (
 	"archive/zip"
 	"encoding/binary"
-	"flag"
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"os"
 	"path/filepath"
 )
 
-var (
-	path   = flag.String("path", "FileTransfer", "Usage : -path <path> | eg : -path FileTransfer/test")
-	ipFlag = flag.String("ip", "localhost:5555", "Usage : -ip <ip address:port> | eg : -ip localhost:5555")
-)
+const zipName = "temp.zip"
 
-const name = "temp.zip"
+type Sender struct {
+	Connection net.Conn
+	Path       string
+}
 
-func main() {
-	flag.Parse()
-	ip := *ipFlag
-	conn := connect(ip)
-	defer conn.Close()
-
+func (s Sender) SendFile() (size int64, e error) {
 	fmt.Println("Zipping File..")
-	f, e := archive(name, *path)
-	checkError(e)
-	defer os.Remove(name)
+	f, e := archive(s.Path, zipName)
+	if e != nil {
+		return 0, e
+	}
+	defer os.Remove(zipName)
 	defer f.Close()
 	_, e = f.Seek(0, io.SeekStart)
-	checkError(e)
+	if e != nil {
+		return 0, e
+	}
 	stat, e := f.Stat()
-	checkError(e)
-	e = sendFileSize(stat.Size(), conn)
-	checkError(e)
+	if e != nil {
+		return 0, e
+	}
+	e = sendFileSize(stat.Size(), s.Connection)
+	if e != nil {
+		return 0, e
+	}
 
 	fmt.Printf("Sending %v bytes...\n", stat.Size())
-	i, e := io.Copy(conn, f)
-	checkError(e)
-	fmt.Printf("Succesfully sent %v bytes of data\n", i)
-}
-
-func connect(ip string) net.Conn {
-	conn, e := net.Dial("tcp", ip)
-	checkError(e)
-	return conn
-}
-
-func checkError(e error) {
+	i, e := io.Copy(s.Connection, f)
 	if e != nil {
-		log.Fatal(e)
+		return 0, e
 	}
+	return i, nil
 }
 
 func sendFileSize(size int64, conn net.Conn) error {
@@ -62,13 +53,13 @@ func sendFileSize(size int64, conn net.Conn) error {
 	return e
 }
 
-func archive(name string, p string) (*os.File, error) {
+func archive(path string, name string) (*os.File, error) {
 	f, e := os.Create(name)
 	if e != nil {
 		return f, e
 	}
 	w := zip.NewWriter(f)
-	e = recursiveArchive(p, w)
+	e = recursiveArchive(path, w)
 	e = w.Close()
 	return f, e
 }
@@ -92,12 +83,12 @@ func recursiveArchive(path string, w *zip.Writer) error {
 		_, e = io.Copy(wr, file)
 		return e
 	}
-	list, e := file.Readdir(0)
+	list, e := file.Readdirnames(0)
 	if e != nil {
 		return e
 	}
 	for _, ss := range list {
-		p := filepath.Join(path, ss.Name())
+		p := filepath.Join(path, ss)
 		e = recursiveArchive(p, w)
 		if e != nil {
 			return e
