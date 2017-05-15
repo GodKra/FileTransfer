@@ -37,11 +37,17 @@ func (d Downloader) DownloadFile() error {
 		}
 
 		fileName := fmt.Sprintf("%v%v.zip", d.Name, i)
-		f, _ := os.Create(fileName)
-		defer f.Close()
+		f, e := os.Create(fileName)
+		if e != nil {
+			return e
+		}
 		fmt.Printf("Copying file from %v\n", conn.RemoteAddr())
-		d.download(f, conn, size)
+		e = d.download(f, conn, size)
+		if e != nil {
+			return e
+		}
 		fmt.Print("\n")
+		f.Close()
 	}
 }
 
