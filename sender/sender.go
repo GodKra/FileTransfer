@@ -12,18 +12,21 @@ import (
 
 const zipName = "temp.zip"
 
+// Sender sends files to the Downloader using the SendFile() method of Sender.
 type Sender struct {
 	Connection net.Conn
 	Path       string
 }
 
+// SendFile first archives a temporary file. Then sends the temp file's size using sendFileSize method. And at last,
+// it sends all the data of the file to the Downloader.
 func (s Sender) SendFile() (size int64, e error) {
 	fmt.Println("Zipping File..")
-	f, e := archive(s.Path, zipName)
+	f, e := archive(s.Path)
 	if e != nil {
 		return 0, e
 	}
-	defer os.Remove(zipName)
+	defer os.Remove(f.Name())
 	defer f.Close()
 	_, e = f.Seek(0, io.SeekStart)
 	if e != nil {
@@ -33,7 +36,7 @@ func (s Sender) SendFile() (size int64, e error) {
 	if e != nil {
 		return 0, e
 	}
-	e = sendFileSize(stat.Size(), s.Connection)
+	e = s.sendFileSize(stat.Size())
 	if e != nil {
 		return 0, e
 	}
@@ -46,15 +49,17 @@ func (s Sender) SendFile() (size int64, e error) {
 	return i, nil
 }
 
-func sendFileSize(size int64, conn net.Conn) error {
+// sendFileSize Sends the file size to the Downloader as a Big Endian.
+func (s Sender) sendFileSize(size int64) error {
 	b := [8]byte{}
 	binary.BigEndian.PutUint64(b[:], uint64(size))
-	_, e := conn.Write(b[:])
+	_, e := s.Connection.Write(b[:])
 	return e
 }
 
-func archive(path string, name string) (*os.File, error) {
-	f, e := os.Create(name)
+// archive Creates a zip file and archives a directory to it using recursiveArchive function.
+func archive(path string) (*os.File, error) {
+	f, e := os.Create(zipName)
 	if e != nil {
 		return f, e
 	}
@@ -64,6 +69,9 @@ func archive(path string, name string) (*os.File, error) {
 	return f, e
 }
 
+// recursiveArchive opens a file and checks if it is a Directory of a file. If it is a file, it will directly
+// archives the data of the file to the zip file. If it is a directory, it will read all the file names in the
+// directory and opens them using recursiveArchive.
 func recursiveArchive(path string, w *zip.Writer) error {
 	file, e := os.Open(path)
 	if e != nil {

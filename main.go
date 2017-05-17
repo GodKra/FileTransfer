@@ -31,19 +31,14 @@ func main() {
 		checkError(e)
 		fmt.Printf("Succesfully sent %v bytes of data\n", size)
 	case "downloader":
-		l, e := listenServer(":5555")
+		l, e := net.Listen("tcp", ":5555")
+		checkError(e)
 		downloadr := downloader.Downloader{Listener: l, Name: *name}
 		e = downloadr.DownloadFile()
 		checkError(e)
 	default:
 		log.Fatal("Give a valid 'type'. Either sender or downloader. Sender sends files. Downloader downloads them.")
 	}
-}
-
-func listenServer(addr string) (listener net.Listener, e error) {
-	listener, e = net.Listen("tcp", addr)
-	checkError(e)
-	return
 }
 
 func checkError(e error) {

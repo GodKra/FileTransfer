@@ -11,13 +11,18 @@ import (
 	"time"
 )
 
+// Downloader opens a server for the Sender to connect to. Downloader downloads files sent
+// by the Sender using DownloadFile() method of Downloader.
 type Downloader struct {
 	Listener net.Listener
 	Conn     net.Conn
 	Name     string
 }
 
-func (d Downloader) DownloadFile() error {
+// DownloadFile creates a Directory using createDir() function then accepts a connection from the listener of
+// Downloader. Then it reads the file size using getSize() function. Then reads the rest of the data sent
+// by the client using download() function
+func (d *Downloader) DownloadFile() error {
 	e := d.createDir()
 	if e != nil {
 		return e
@@ -26,11 +31,11 @@ func (d Downloader) DownloadFile() error {
 	for {
 		i++
 		fmt.Printf("\n-- File %v --\n", i)
-		conn, e := d.Listener.Accept()
+		var e error
+		d.Conn, e = d.Listener.Accept()
 		if e != nil {
 			return e
 		}
-		d.Conn = conn
 		size, e := d.getSize()
 		if e != nil {
 			return e
@@ -41,8 +46,8 @@ func (d Downloader) DownloadFile() error {
 		if e != nil {
 			return e
 		}
-		fmt.Printf("Copying file from %v\n", conn.RemoteAddr())
-		e = d.download(f, conn, size)
+		fmt.Printf("Copying file from %v\n", d.Conn.RemoteAddr())
+		e = d.download(f, size)
 		if e != nil {
 			return e
 		}
@@ -51,6 +56,8 @@ func (d Downloader) DownloadFile() error {
 	}
 }
 
+// createDir creates a new file called "FileTransfer" (if it exists, does nothing) and Changes working directory
+// to "FileTransfer" directory
 func (d Downloader) createDir() error {
 	os.Mkdir("FileTransfer", 0666)
 	e := os.Chdir("FileTransfer")
@@ -60,22 +67,25 @@ func (d Downloader) createDir() error {
 	return nil
 }
 
-func (d Downloader) download(dst io.Writer, src io.Reader, s uint64) error {
+// download reads the the data sent by the client (which is data of the file sent). While reading the data,
+// it also makes a progress bar and updates it each 32KBs read. When downloading is finished, It prints the
+// time taken to download the file.
+func (d Downloader) download(file *os.File, s uint64) error {
 	duration := time.Now()
 	buf := make([]byte, 32*1024)
 	var written int
 	const length = 50
 	progressbar := bytes.Repeat([]byte{'-'}, length)
 	for {
-		nr, er := src.Read(buf)
+		nr, er := d.Conn.Read(buf)
 		if nr > 0 {
-			nw, ew := dst.Write(buf[0:nr])
+			nw, ew := file.Write(buf[0:nr])
 			written += nw
 			percentage := float64(written) / float64(s) * 100
 			for i := 0; i < int(length*float64(percentage/100)); i++ {
 				progressbar[i] = '='
 			}
-			fmt.Printf("\r%v/%v [%s] %.3v%%      ", size(written), size(s), progressbar, percentage)
+			fmt.Printf("\r%v/%v [%s] %.3v%%      ", sizeFormat(written), sizeFormat(s), progressbar, percentage)
 			if ew != nil {
 				return ew
 			}
@@ -94,9 +104,10 @@ func (d Downloader) download(dst io.Writer, src io.Reader, s uint64) error {
 	return nil
 }
 
-type size int64
+// This type is used to change the way how fmt.Print prints the file size.
+type sizeFormat int64
 
-func (s size) String() string {
+func (s sizeFormat) String() string {
 	switch {
 	case s < 1<<10:
 		return fmt.Sprintf("%v B", float64(s))
@@ -109,6 +120,7 @@ func (s size) String() string {
 	}
 }
 
+// getSize reads the first 8 bytes sent by the client (which is the size of the file) and returns it.
 func (d Downloader) getSize() (size uint64, e error) {
 	b := [8]byte{}
 	_, e = d.Conn.Read(b[:])
