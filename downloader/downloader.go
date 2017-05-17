@@ -36,6 +36,7 @@ func (d *Downloader) DownloadFile() error {
 		if e != nil {
 			return e
 		}
+		d.Conn.Write([]byte{'`'})
 		size, e := d.getSize()
 		if e != nil {
 			return e
