@@ -1,4 +1,4 @@
-package downloader
+package reciever
 
 import (
 	"bytes"
@@ -11,18 +11,18 @@ import (
 	"time"
 )
 
-// Downloader opens a server for the Sender to connect to. Downloader downloads files sent
-// by the Sender using DownloadFile() method of Downloader.
-type Downloader struct {
+// Reciever opens a server for the Sender to connect to. Reciever downloads files sent
+// by the Sender using RecieverFile() method of Reciever.
+type Reciever struct {
 	Listener net.Listener
 	Conn     net.Conn
 	Name     string
 }
 
-// DownloadFile creates a Directory using createDir() function then accepts a connection from the listener of
-// Downloader. Then it reads the file size using getSize() function. Then reads the rest of the data sent
-// by the client using download() function
-func (d *Downloader) DownloadFile() error {
+// RecieveFile creates a Directory using createDir() function then accepts a connection from the listener of
+// Reciever. Then it reads the file size using getSize() function. Then reads the rest of the data sent
+// by the Sender using download() function
+func (d *Reciever) RecieveFile() error {
 	e := d.createDir()
 	if e != nil {
 		return e
@@ -59,7 +59,7 @@ func (d *Downloader) DownloadFile() error {
 
 // createDir creates a new file called "FileTransfer" (if it exists, does nothing) and Changes working directory
 // to "FileTransfer" directory
-func (d Downloader) createDir() error {
+func (d Reciever) createDir() error {
 	os.Mkdir("FileTransfer", 0666)
 	e := os.Chdir("FileTransfer")
 	if e != nil {
@@ -71,7 +71,7 @@ func (d Downloader) createDir() error {
 // download reads the the data sent by the client (which is data of the file sent). While reading the data,
 // it also makes a progress bar and updates it each 32KBs read. When downloading is finished, It prints the
 // time taken to download the file.
-func (d Downloader) download(file *os.File, s uint64) error {
+func (d Reciever) download(file *os.File, s uint64) error {
 	duration := time.Now()
 	buf := make([]byte, 32*1024)
 	var written int
@@ -121,8 +121,8 @@ func (s sizeFormat) String() string {
 	}
 }
 
-// getSize reads the first 8 bytes sent by the client (which is the size of the file) and returns it.
-func (d Downloader) getSize() (size uint64, e error) {
+// getSize reads the first 8 bytes sent by the Sender (which is the size of the file) and returns it.
+func (d Reciever) getSize() (size uint64, e error) {
 	b := [8]byte{}
 	_, e = d.Conn.Read(b[:])
 	size = binary.BigEndian.Uint64(b[:])

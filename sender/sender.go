@@ -12,14 +12,14 @@ import (
 
 const zipName = "temp.zip"
 
-// Sender sends files to the Downloader using the SendFile() method of Sender.
+// Sender sends files to the Reciever using the SendFile() method of Sender.
 type Sender struct {
 	Connection net.Conn
 	Path       string
 }
 
 // SendFile first archives a temporary file. Then sends the temp file's size using sendFileSize method. And at last,
-// it sends all the data of the file to the Downloader.
+// it sends all the data of the file to the Reciever.
 func (s Sender) SendFile() (size int64, e error) {
 	fmt.Println("Zipping File..")
 	f, e := archive(s.Path)
@@ -49,7 +49,7 @@ func (s Sender) SendFile() (size int64, e error) {
 	return i, nil
 }
 
-// sendFileSize Sends the file size to the Downloader as a Big Endian.
+// sendFileSize Sends the file size to the Reciever as a Big Endian.
 func (s Sender) sendFileSize(size int64) error {
 	b := [8]byte{}
 	binary.BigEndian.PutUint64(b[:], uint64(size))
