@@ -19,3 +19,14 @@ reciever server and continue sending. Giving an IP flag will still make sure it 
 
 ## Installation
   You can install this program from the '[Releases](https://github.com/GodKra/FileTransfer/releases/latest "Latest Release")' tab
+## CommandLine Flags
+```
+Usage: filetransfer <flags>
+  
+  Available Flags:
+    --filePath [value]: Path of the file you want to transfer. Must for Sender
+    --ip [value]:       The IP of the downloader you want to send the file to. 0 for automatic. Optional for Sender
+    --fileName [value]: Name to use when saving the recieved files. Optional for Downloader
+    --type [value]:     The type of filetransfer. 'sender' to send files. 'reciever' to recieve files
+    --help:             Prints this.
+```
