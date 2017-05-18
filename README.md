@@ -1,6 +1,6 @@
 # ꜰɪʟᴇ ᴛʀᴀɴsꜰᴇʀ
 
-A simple program used for sending files and folders. give argument "-help" for availabe flags. This program consists of two things 
+A simple program used for sending files and directories. give argument "-help" for availabe flags. This program consists of two things 
 which does different jobs. They are "sender" and "downloader". Downloader starts a new server which will accept any data sent to
 it and saves it. Sender sends data to the downloader. you can change the IP which sender uses using the ```ip``` flag. 
 You should set a  ```type``` flag to switch between sending and downloading a file. Default state of the flag is "downloader" 
