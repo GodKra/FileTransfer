@@ -8,6 +8,7 @@ import (
 	"log"
 	"net"
 	"os"
+	"regexp"
 	"time"
 )
 
@@ -101,8 +102,15 @@ func (d Reciever) download(file *os.File, s uint64) error {
 			return er
 		}
 	}
-	fmt.Printf("Time taken: %v", time.Now().Sub(duration))
+	timeTaken := time.Now().Sub(duration)
+	fmt.Printf("Time taken: %v", formatDuration(timeTaken))
 	return nil
+}
+
+func formatDuration(d time.Duration) string {
+	str := d.String()
+	r, _ := regexp.Compile(`([^\d\.]+)`)
+	return r.ReplaceAllString(str, "$1 ")
 }
 
 // This type is used to change the way how fmt.Print prints the file size.
