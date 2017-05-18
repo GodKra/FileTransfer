@@ -12,7 +12,7 @@ downloader server. Giving an IP flag will still make sure it is a downloader ser
 **USES HIGH DISK SPACE**
 
 ### How it works:
-* Sender `Zip`s any file selected using ```path``` flag.
+* Sender `Zip`s any file selected (```path``` flag).
 * Sender sends the zipped file size then file to the Downloader.
 * Downloader reads the size and makes a progress bar.
 * Downloader saves the read zipped file.
