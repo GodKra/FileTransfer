@@ -14,8 +14,10 @@ import (
 var (
 	// Sender flags: filePath, ipFlag
 	// Downloader flag: name
+	// Both: port
 	filePath = flag.String("filePath", "", "Usage : -filePath <path> | eg : -filePath FileTransfer/test")
-	ipFlag   = flag.String("ip", "0", "0 for automatic . Usage : -ip <ip address:port> | eg : -ip localhost:5555")
+	ipFlag   = flag.String("ip", "0", "0 for automatic . Usage : -ip <ip address> | eg : -ip localhost")
+	port     = flag.String("port", "5151", "Usage: -port <port> | eg: --port 1234")
 	name     = flag.String("fileName", "ftdownload", "Usage : -fileName <FileName> eg : -fileName test")
 	typ      = flag.String("type", "reciever", "Optional Usage: -type <sender/reciever> | eg: -type downloader")
 	help     = flag.Bool("help", false, "Show help. Usage: --help")
@@ -37,7 +39,7 @@ func main() {
 		case "0":
 			for i := 0; i < 255; i++ {
 				var e error
-				ip := fmt.Sprintf("192.168.1.%v:5151", i)
+				ip := fmt.Sprintf("192.168.1.%v:%v", i, *port)
 				conn, e = net.DialTimeout("tcp", ip, time.Millisecond*200)
 				if e != nil {
 					continue
@@ -50,7 +52,7 @@ func main() {
 			}
 		default:
 			var e error
-			conn, e = net.Dial("tcp", fmt.Sprintf("%v:5151", *ipFlag))
+			conn, e = net.Dial("tcp", fmt.Sprintf("%v:%v", *ipFlag, *port))
 			checkError(e)
 			buf := [1]byte{}
 			conn.Read(buf[:])
@@ -67,7 +69,7 @@ func main() {
 		checkError(e)
 		fmt.Printf("Succesfully sent %v bytes of data\n", size)
 	case "reciever":
-		l, e := net.Listen("tcp", ":5151")
+		l, e := net.Listen("tcp", fmt.Sprintf(":%v", *port))
 		checkError(e)
 		recievr := reciever.Reciever{Listener: l, Name: *name}
 		e = recievr.RecieveFile()
@@ -104,4 +106,5 @@ func printHelp() {
 	fmt.Println("\t--fileName [value]: Name to use when saving the recieved files. Optional for Downloader")
 	fmt.Println("\t--type [value]:     Optional. The type of filetransfer. 'sender' to send files. 'reciever' to recieve files")
 	fmt.Println("\t--help:             Prints this.")
+	fmt.Println("\t--port [value]:     The port of the Reciever. Default is '5151'. Optional for both Sender and Reciever")
 }
