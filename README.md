@@ -3,8 +3,9 @@
 A simple program used for sending files and directories. give argument "-help" for availabe flags. This program consists of two things 
 which does different jobs. They are "sender" and "reciever". Reciever starts a new server which will accept any data sent to
 it and saves it. Sender sends data to the Reciever. you can change the IP which sender uses using the ```ip``` flag (0 for automatic ip finding). 
-You should set a  ```type``` flag to switch between sending and recieving a file. Default state of the flag is "reciever" 
-(because you need to create a server before connecting to it). You have to give either "reciever" or "sender" to the ```type``` flag.
+You should set the optional  ```type``` flag to switch between sending and recieving a file. Default state of the flag is "reciever" 
+(because you need to create a server before connecting to it). You have to give either "reciever" or "sender" to the ```type``` flag. If
+you have set the filePath flag (which is what Sender sends), Then the program will decide you want to send a file. So the type will be changed to Sender. 
 The ```ip``` flag's default is 0. If ip flag is in the default state, it will attempt to search for a reciever server automatically.
 When the server responds, it will read from the server waiting for a response. If it recieves "\`", then it will decide it is a 
 reciever server and continue sending. Giving an IP flag will still make sure it is a downloader server. 
