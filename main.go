@@ -13,13 +13,13 @@ import (
 
 var (
 	// Sender flags: filePath, ipFlag
-	// Downloader flag: name
+	// Reciever flag: name
 	// Both: port
 	filePath = flag.String("filePath", "", "Usage : -filePath <path> | eg : -filePath FileTransfer/test")
 	ipFlag   = flag.String("ip", "0", "0 for automatic . Usage : -ip <ip address> | eg : -ip localhost")
-	port     = flag.String("port", "5151", "Usage: -port <port> | eg: --port 1234")
-	name     = flag.String("fileName", "ftdownload", "Usage : -fileName <FileName> eg : -fileName test")
-	typ      = flag.String("type", "reciever", "Optional Usage: -type <sender/reciever> | eg: -type downloader")
+	port     = flag.String("port", "7084", "Usage: -port <port> | eg: --port 1234")
+	name     = flag.String("saveName", "ftdownload", "Usage : -fileName <FileName> eg : -fileName test")
+	typ      = flag.String("type", "reciever", "Optional Usage: -type <sender/reciever> | eg: -type reciever")
 	help     = flag.Bool("help", false, "Show help. Usage: --help")
 )
 
@@ -102,9 +102,9 @@ func printHelp() {
 	fmt.Println("Usage: filetransfer <flags>")
 	fmt.Println("\nAvailable Flags: ")
 	fmt.Println("\t--filePath [value]: Path of the file you want to transfer. Must for Sender. If this exists, type will be considered as a sender")
-	fmt.Println("\t--ip [value]:       The IP of the downloader you want to send the file to. 0 for automatic. Optional for Sender")
-	fmt.Println("\t--fileName [value]: Name to use when saving the recieved files. Optional for Downloader")
+	fmt.Println("\t--ip [value]:       The IP of the Reciever you want to send the file to. 0 for automatic. Optional for Sender")
+	fmt.Println("\t--saveName [value]: Name to use when saving the recieved files. Optional for Reciever")
 	fmt.Println("\t--type [value]:     Optional. The type of filetransfer. 'sender' to send files. 'reciever' to recieve files")
 	fmt.Println("\t--help:             Prints this.")
-	fmt.Println("\t--port [value]:     The port of the Reciever. Default is '5151'. Optional for both Sender and Reciever")
+	fmt.Println("\t--port [value]:     The port of the Reciever. Default is '7084'. Optional for both Sender and Reciever")
 }
