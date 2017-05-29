@@ -6,7 +6,8 @@ which does different jobs. They are "sender" and "reciever".
   Starts a new server which will accept any data sent to it and saves it. 
 ### Sender 
   Sends data to the Reciever. you can change the IP which sender uses using the ```ip``` flag (0 for automatic ip finding). 
-**USES HIGH DISK SPACE**
+  
+**THIS PROGRAM USES HIGH DISK SPACE**
 
 ## Important Flags
   #### Type:
