@@ -46,6 +46,13 @@ func main() {
 				} else {
 					if isRecieverServer(conn) {
 						fmt.Printf("Found IP: %v\n", conn.RemoteAddr())
+						// Sent to validate Sender server from reciever server
+						conn.Write([]byte{70, 84})
+						buf := [2]byte{}
+						conn.Read(buf[:])
+						if buf[0] == 84 && buf[1] == 70 {
+							log.Fatal("Reciever identifies you as an invalid client")
+						}
 						break
 					}
 				}
@@ -54,17 +61,15 @@ func main() {
 			var e error
 			conn, e = net.Dial("tcp", fmt.Sprintf("%v:%v", *ipFlag, *port))
 			checkError(e)
-			buf := [1]byte{}
-			conn.Read(buf[:])
-			if len(buf) > 0 {
-				if buf[0] != '`' {
-					log.Fatal("Invalid IP address")
-				}
+			if !isRecieverServer(conn) {
+				log.Fatal("Invalid IP address")
 			}
+			// Sent to validate Sender server from reciever server
+			conn.Write([]byte{70, 84})
 		}
 		defer conn.Close()
 
-		sendr := sender.Sender{Connection: conn, Path: *filePath}
+		sendr := sender.Sender{Connection: conn, FilePath: *filePath}
 		size, e := sendr.SendFile()
 		checkError(e)
 		fmt.Printf("Succesfully sent %v bytes of data\n", size)
@@ -73,7 +78,9 @@ func main() {
 		checkError(e)
 		recievr := reciever.Reciever{Listener: l, Name: *name}
 		e = recievr.RecieveFile()
-		checkError(e)
+		if e.Error() == reciever.ErrInvalidClient {
+			log.Fatalf("Invalid Client Sent Data: %v", recievr.Conn.RemoteAddr())
+		}
 	default:
 		log.Fatal("Give a valid 'type'. Either sender or reciever. Sender sends files. Reciever recieves them.")
 	}

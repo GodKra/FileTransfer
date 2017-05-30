@@ -15,14 +15,14 @@ const zipName = "temp.zip"
 // Sender sends files to the Reciever using the SendFile() method of Sender.
 type Sender struct {
 	Connection net.Conn
-	Path       string
+	FilePath   string
 }
 
 // SendFile first archives a temporary file. Then sends the temp file's size using sendFileSize method. And at last,
 // it sends all the data of the file to the Reciever.
 func (s Sender) SendFile() (size int64, e error) {
 	fmt.Println("Zipping File..")
-	f, e := archive(s.Path)
+	f, e := archive(s.FilePath)
 	if e != nil {
 		return 0, e
 	}
@@ -72,7 +72,7 @@ func archive(path string) (*os.File, error) {
 // recursiveArchive opens a file and checks if it is a Directory of a file. If it is a file, it will directly
 // archives the data of the file to the zip file. If it is a directory, it will read all the file names in the
 // directory and opens them using recursiveArchive.
-func recursiveArchive(path string, w *zip.Writer) error {
+func recursiveArchive(path string, w *zip.Writer) (e error) {
 	file, e := os.Open(path)
 	if e != nil {
 		return e

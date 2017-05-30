@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"fmt"
+	"github.com/GodKra/FileTransfer/format"
 	"io"
 	"log"
 	"net"
@@ -20,11 +21,13 @@ type Reciever struct {
 	Name     string
 }
 
+var ErrInvalidClient = "data recieved from an invalid client"
+
 // RecieveFile creates a Directory using createDir() function then accepts a connection from the listener of
 // Reciever. Then it reads the file size using getSize() function. Then reads the rest of the data sent
 // by the Sender using download() function
-func (d *Reciever) RecieveFile() error {
-	e := d.createDir()
+func (r *Reciever) RecieveFile() error {
+	e := r.createDir()
 	if e != nil {
 		return e
 	}
@@ -33,23 +36,28 @@ func (d *Reciever) RecieveFile() error {
 		i++
 		fmt.Printf("\n-- File %v --\n", i)
 		var e error
-		d.Conn, e = d.Listener.Accept()
+		r.Conn, e = r.Listener.Accept()
 		if e != nil {
 			return e
 		}
-		d.Conn.Write([]byte{'`'})
-		size, e := d.getSize()
+		r.Conn.Write([]byte{'`'})
+		if !isSenderClient(r.Conn) {
+			r.Conn.Write([]byte{84, 70})
+			return fmt.Errorf("%v", ErrInvalidClient)
+		}
+		r.Conn.Write([]byte{70, 84})
+		size, e := r.getSize()
 		if e != nil {
 			return e
 		}
 
-		fileName := fmt.Sprintf("%v%v.zip", d.Name, i)
+		fileName := fmt.Sprintf("%v%v.zip", r.Name, i)
 		f, e := os.Create(fileName)
 		if e != nil {
 			return e
 		}
-		fmt.Printf("Copying file from %v\n", d.Conn.RemoteAddr())
-		e = d.download(f, size)
+		fmt.Printf("Copying file from %v\n", r.Conn.RemoteAddr())
+		e = r.download(f, size)
 		if e != nil {
 			return e
 		}
@@ -87,7 +95,7 @@ func (d Reciever) download(file *os.File, s uint64) error {
 			for i := 0; i < int(length*float64(percentage/100)); i++ {
 				progressbar[i] = '='
 			}
-			fmt.Printf("\r%v/%v [%s] %.3v%%      ", sizeFormat(written), sizeFormat(s), progressbar, percentage)
+			fmt.Printf("\r%v/%v [%s] %.3v%%      ", format.SizeFormat(written), format.SizeFormat(s), progressbar, percentage)
 			if ew != nil {
 				return ew
 			}
@@ -113,26 +121,22 @@ func formatDuration(d time.Duration) string {
 	return r.ReplaceAllString(str, "$1 ")
 }
 
-// This type is used to change the way how fmt.Print prints the file size.
-type sizeFormat int64
-
-func (s sizeFormat) String() string {
-	switch {
-	case s < 1<<10:
-		return fmt.Sprintf("%v B", float64(s))
-	case s < 1<<20:
-		return fmt.Sprintf("%.2f KB", float64(s)/(1<<10))
-	case s < 1<<30:
-		return fmt.Sprintf("%.2f MB", float64(s)/(1<<20))
-	default:
-		return fmt.Sprintf("%.2f GB", float64(s)/(1<<30))
-	}
-}
-
 // getSize reads the first 8 bytes sent by the Sender (which is the size of the file) and returns it.
 func (d Reciever) getSize() (size uint64, e error) {
 	b := [8]byte{}
 	_, e = d.Conn.Read(b[:])
 	size = binary.BigEndian.Uint64(b[:])
 	return
+}
+
+// isSenderClient is used to validate the Client which is sending data to the Reciever.
+func isSenderClient(conn net.Conn) bool {
+	buf := [2]byte{}
+	conn.Read(buf[:])
+	if len(buf) > 1 {
+		if buf[0] == 70 && buf[1] == 84 {
+			return true
+		}
+	}
+	return false
 }
