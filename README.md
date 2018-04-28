@@ -1,7 +1,6 @@
 # ꜰɪʟᴇ ᴛʀᴀɴsꜰᴇʀ
 
-A simple program used for sending files and directories. give argument "-help" for availabe flags. This program consists of two things 
-which does different jobs. They are "sender" and "reciever". 
+A simple program used for sending files and directories. give argument "-help" for availabe flags. This program consists of two main things. A "Sender" and a "Reciever". 
 ### Reciever 
   Starts a new server which will accept any data sent to it and saves it. 
 ### Sender 
